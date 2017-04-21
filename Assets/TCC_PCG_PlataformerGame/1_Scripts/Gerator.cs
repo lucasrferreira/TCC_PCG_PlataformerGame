@@ -1,68 +1,110 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Assets.TCC_PCG_PlataformerGame.Scripts;
-using Assets.TCC_PCG_PlataformerGame._1_Scripts;
 using TCC_PCG_PlataformerGame.Scripts;
 using UnityEngine;
 
-public class Gerator : MonoBehaviour
+namespace Assets.TCC_PCG_PlataformerGame.Scripts
 {
-
-    [SerializeField]
-    private List<BuildPiece> _buildPieces = BuildPiecesRepository.BuildPieces;
-    [SerializeField]
-    private Room _roomToGenerate;
-    [SerializeField]
-    private char[,] _room;
-
-    private void Awake()
+    public class Gerator : MonoBehaviour
     {
-        _room = new char[_roomToGenerate.Size.X, _roomToGenerate.Size.Y];
-        for (var i = 0; i < _room.Length/2; i++)
-        {
-            for (var j = 0; j < _room.Length/2; j++)
-            {
+    
+        [SerializeField]
+        private readonly List<BuildPiece> _buildPieces = BuildPiecesRepository.BuildPieces;
+        [SerializeField]
+        private Room _roomToGenerate;
+        private char[,] _room;
 
-                _room[i,j] = 'n';
+        private static readonly System.Random Rnd = new System.Random();
+
+        private void Awake()
+        {
+            _room = new char[_roomToGenerate.Size.X, _roomToGenerate.Size.Y];
+            for (var i = 0; i < _room.Length/2; i++)
+            {
+                for (var j = 0; j < _room.Length/2; j++)
+                {
+
+                    _room[i,j] = 'n';
+                }
+            }
+
+            foreach (var exits in _roomToGenerate.ExitPositionList)
+            {
+                _room[exits.X, exits.X] = 'e';
             }
         }
 
-        foreach (var exits in _roomToGenerate.ExitPositionList)
+        public void InitiateAlgoritm()
         {
-            _room[exits.X, exits.X] = 'e';
+            var room = _room;
+            var solution = new BuildRoomSolution();
+            var exitPoint = new List<Point2D>(_roomToGenerate.ExitPositionList);
+            var exitPointLeft = new List<Point2D>(exitPoint);
+            var buildPieces = _buildPieces;
+            var startPoints = new List<Point2D> { GetStartPoint(_roomToGenerate) };
         }
-    }
 
-    public void Generate()
-    {
-        _room[_roomToGenerate.StartPosition.X, _roomToGenerate.StartPosition.Y] = 'c';
-
-        var rnd = new System.Random();
-        foreach (var startPoint in GetStartPositions(_room).OrderBy(item => rnd.Next()))
+        public void Generate(char[,] room, BuildRoomSolution solution, List<Point2D> exitPoint, 
+            List<Point2D> exPointLeft, List<BuildPiece> bp, List<Point2D> startPoints)
         {
-            foreach (var buildPiece in _buildPieces.OrderBy(item => rnd.Next()))
+            foreach (var startPoint in Perm(startPoints))
             {
-
+                foreach (var buildPiece in Perm(bp))
+                {
+                    foreach (var transformation in Perm(Transformations(buildPiece, startPoint)))
+                    {
+                           
+                    }
+                }
             }
         }
-    }
 
-    private static IEnumerable<Point2D> GetStartPositions(char[,] room)
-    {
-        var sList = new List<Point2D>();
-        for (var i = 0; i < room.Length/2; i++)
+        private bool SatisfiesConstraints(TransformedBuildPiece tb, BuildRoomSolution sol, char[,] room)
         {
-            for (var j = 0; j < room.Length/2; j++)
-            {
-                if(room[i,j] == 'c')
-                    sList.Add(new Point2D(i,j));
-            }
+
+
+            return true;
         }
-        return sList;
-    }
+
+        private static IEnumerable<TransformedBuildPiece> Transformations(BuildPiece b, Point2D s)
+        {
+            var cCells = b.GetConnectionCellsPoints();
+            var transformations = cCells.Select(point2D => new TransformedBuildPiece(point2D, s, b)).ToList();
+            return transformations;
+        }
+    
+
+        private static List<T> Perm<T>(IEnumerable<T> list)
+        {
+            var copy = new List<T>(list);
+            copy = copy.OrderBy(i => Rnd.Next()).ToList();
+            return copy;
+        }
+
+        public Point2D GetStartPoint(Room room)
+        {
+            var count = room.ExitPositionList.Count;
+            var rnd = new System.Random();
+            var index = rnd.Next(0, count-1);
+            return room.ExitPositionList[index];
+        }
+
+        private static IEnumerable<Point2D> GetStartPositions(char[,] room)
+        {
+            var sList = new List<Point2D>();
+            for (var i = 0; i < room.Length/2; i++)
+            {
+                for (var j = 0; j < room.Length/2; j++)
+                {
+                    if(room[i,j] == 'c')
+                        sList.Add(new Point2D(i,j));
+                }
+            }
+            return sList;
+        }
 
 
    
+    }
 }
