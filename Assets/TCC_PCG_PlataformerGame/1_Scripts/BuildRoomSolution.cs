@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Assets.TCC_PCG_PlataformerGame.Scripts;
 using TCC_PCG_PlataformerGame.Scripts;
 
@@ -20,23 +21,53 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
 
     public class BuildRoomSolution
     {
-        public List<TransformedBuildPiece> TransformedBuildPieces { get; private set; }
+        private readonly List<TransformedBuildPiece> _transformedBuildPieces;
         private char[,] _room;
+        private bool _alreadyCalculated= false;
 
         public BuildRoomSolution()
         {
-            TransformedBuildPieces = new List<TransformedBuildPiece>();  
+            _transformedBuildPieces = new List<TransformedBuildPiece>();  
         }
 
-        
+        public char[,] GetAtualSolutionRoom(char[,] room)
+        {
+            if(_alreadyCalculated) return _room;
+            _room = (char[,]) room.Clone();
+
+            foreach (var tbp in _transformedBuildPieces)
+            {
+                var dif = tbp.StartPoint - tbp.ConnectionPoint;
+                for (var i = 0; i < tbp.BuildPiece.Piece.GetLength(0); i++)
+                {
+                    var cPoint = new Point2D(i,0);
+                    for (var j = 0; j < tbp.BuildPiece.Piece.GetLength(1); j++)
+                    {
+                        cPoint.Y = j;
+                        var newPoint = dif + cPoint;
+                        _room[newPoint.X, newPoint.Y] = tbp.BuildPiece.Piece[i, j];
+                    }
+                }
+            }
+            _alreadyCalculated = true;
+            return _room;
+        }
+
         public void Add(TransformedBuildPiece tBuildPiece)
         {
-            TransformedBuildPieces.Add(tBuildPiece);
+            _transformedBuildPieces.Add(tBuildPiece);
+            _alreadyCalculated = false;
         }
 
         public void RemoveLast()
         {
-            TransformedBuildPieces.RemoveAt(TransformedBuildPieces.Count - 1);
+            _transformedBuildPieces.RemoveAt(_transformedBuildPieces.Count - 1);
+            _alreadyCalculated = false;
+        }
+
+        public bool Empty()
+        {
+            return !_transformedBuildPieces.Any();
         }
     }
 }

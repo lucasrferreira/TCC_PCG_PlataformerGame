@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Assets.TCC_PCG_PlataformerGame.Scripts;
 using TCC_PCG_PlataformerGame.Scripts;
+using UnityEditor;
 using UnityEngine;
 
 namespace Assets.TCC_PCG_PlataformerGame.Scripts
@@ -20,9 +23,9 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
         private void Awake()
         {
             _room = new char[_roomToGenerate.Size.X, _roomToGenerate.Size.Y];
-            for (var i = 0; i < _room.Length/2; i++)
+            for (var i = 0; i < _room.GetLength(0); i++)
             {
-                for (var j = 0; j < _room.Length/2; j++)
+                for (var j = 0; j < _room.GetLength(1); j++)
                 {
 
                     _room[i,j] = 'n';
@@ -33,9 +36,10 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
             {
                 _room[exits.X, exits.X] = 'e';
             }
+            InitiateAlgoritm((x, y) => {} );
         }
 
-        public void InitiateAlgoritm()
+        public void InitiateAlgoritm(Action<char[,], BuildRoomSolution> callbackAction)
         {
             var room = _room;
             var solution = new BuildRoomSolution();
@@ -43,28 +47,153 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
             var exitPointLeft = new List<Point2D>(exitPoint);
             var buildPieces = _buildPieces;
             var startPoints = new List<Point2D> { GetStartPoint(_roomToGenerate) };
-        }
 
-        public void Generate(char[,] room, BuildRoomSolution solution, List<Point2D> exitPoint, 
-            List<Point2D> exPointLeft, List<BuildPiece> bp, List<Point2D> startPoints)
-        {
-            foreach (var startPoint in Perm(startPoints))
+            StartCoroutine(Generate(room, solution, exitPoint, exitPointLeft, buildPieces, startPoints, value =>
             {
-                foreach (var buildPiece in Perm(bp))
+                callbackAction(room, value);
+            }));
+        }
+        
+
+
+        private IEnumerator Generate(char[,] room, BuildRoomSolution solution, List<Point2D> exitPoint, 
+            List<Point2D> exitPointLeft, List<BuildPiece> buildPieces, List<Point2D> startPoints, 
+            Action<BuildRoomSolution> callbackAction)
+        {
+            foreach (var sp in Perm(startPoints))
+            {
+                foreach (var bp in Perm(buildPieces))
                 {
-                    foreach (var transformation in Perm(Transformations(buildPiece, startPoint)))
+                    foreach (var g in Perm(Transformations(bp, sp)))
                     {
-                           
+                        if (!SatisfiesConstraints(g, solution, room)) continue;
+
+                        solution.Add(g);
+                        PrintRoom(solution.GetAtualSolutionRoom(room));
+                        var exits = ContainsExits(g, exitPointLeft) as List<Point2D>;
+                        exitPointLeft = exitPointLeft.Except(exits).ToList();
+                        if (!exitPointLeft.Any())
+                            callbackAction(solution);
+                        if (exits.Any())
+                            startPoints = PossibleStartPoints(solution, room) as List<Point2D>;
+                        else
+                            startPoints = PossibleStartPoints(g, sp) as List<Point2D>;
+
+                        BuildRoomSolution returnedValue = null;
+                        yield return Generate(room, solution, exitPoint, exitPointLeft, _buildPieces, startPoints,
+                            (value) => { returnedValue = value; }
+                        );
+                        while (returnedValue == null)
+                        {
+                            yield return null;
+                        }
+                        if (!returnedValue.Empty())
+                            callbackAction(returnedValue);
+
+                        solution.RemoveLast();
+                        exitPointLeft = exitPointLeft.Union(exits) as List<Point2D>;
                     }
                 }
             }
+            callbackAction(new BuildRoomSolution());
+        }
+
+        private static IEnumerable<Point2D> ContainsExits(TransformedBuildPiece tbp, IEnumerable<Point2D> exitPoints)
+        {
+            return (from ep in exitPoints
+                    let c = tbp.ConnectionPoint
+                    let p = tbp.StartPoint
+                    let infBound = p - c
+                    let supBound = infBound + new Point2D(tbp.BuildPiece.Piece.GetLength(0), tbp.BuildPiece.Piece.GetLength(1))
+                    let infBoundDif = infBound - ep let supBoundDif = supBound - ep
+                    where infBoundDif.Y < 0 && infBoundDif.X < 0 && supBoundDif.Y > 0 && supBoundDif.X > 0
+                    select ep).ToList();
+        }
+
+        private static void PrintRoom(char[,] room)
+        {
+            var rowCount = room.GetLength(0);
+            var colCount = room.GetLength(1);
+            var sisout = "";
+            for (int row = 0; row < rowCount; row++)
+            {
+                for (int col = 0; col < colCount; col++)
+                    sisout += string.Format("{0} ", room[row, col]);
+                sisout += "\n";
+            }
+            print(sisout);
+        }
+
+        private IEnumerable<Point2D> PossibleStartPoints(BuildRoomSolution sol, char[,] room)
+        {
+            var startPoints = new List<Point2D>();
+
+            var atualRoom = sol.GetAtualSolutionRoom(room);
+            for (var i = 0; i < atualRoom.GetLength(0); i++)
+            {
+                for (var j = 0; j < atualRoom.GetLength(1); j++)
+                {
+                    if (atualRoom[i, j] == 'c')
+                        startPoints.Add(new Point2D(i, j));
+                }
+            }
+            return startPoints;
+        }
+        private IEnumerable<Point2D> PossibleStartPoints(TransformedBuildPiece tbp, Point2D s)
+        {
+            var startPoints = new List<Point2D>();
+
+            var piece = tbp.BuildPiece.Piece;
+            var c = tbp.ConnectionPoint;
+            var p = s;
+            var diference = p - c;
+
+            for (var i = 0; i < piece.GetLength(0); i++)
+            {
+                for (var j = 0; j < piece.GetLength(1); j++)
+                {
+                    if (piece[i, j] == 'c')
+                        startPoints.Add(diference + (new Point2D( i, j)) );
+                }
+            }
+            return startPoints;
         }
 
         private bool SatisfiesConstraints(TransformedBuildPiece tb, BuildRoomSolution sol, char[,] room)
         {
+            var roomHeight = room.GetLength(0);
+            var roomWidth = room.GetLength(1);
+            var c = tb.ConnectionPoint;
+            var p = tb.StartPoint;
+            var diference = p - c;
+            if (diference.Y < 0 || diference.X < 0 || 
+                diference.Y > roomWidth || diference.X > roomHeight) //C0 - test piece in room bounds
+                return false;
 
+            var atualRoom = sol.GetAtualSolutionRoom(room);
+            //if (atualRoom[tb.StartPoint.X, tb.StartPoint.Y] !=
+            //    tb.BuildPiece.Piece[tb.ConnectionPoint.X, tb.ConnectionPoint.Y]) // teste if connection cells match! C1
+            //    return false;
 
-            return true;
+            var addedPath = false; //will receive true if some connection cell was added to solution path
+            for (var i = 0; i < tb.BuildPiece.Piece.GetLength(0); i++)
+            {
+                var bpPoint = new Point2D(i, 0);
+                for (var j = 0; j < tb.BuildPiece.Piece.GetLength(1); j++)
+                {
+                    bpPoint.Y = j;
+                    var newPoint = diference + bpPoint;
+                    var roomValue = atualRoom[newPoint.X, newPoint.Y];
+                    var bpValue = tb.BuildPiece.Piece[i, j];
+
+                    if (roomValue == 's' && (bpValue == 'c' || bpValue == 'b')) return false; //C1
+                    if (bpValue == 's' && (roomValue == 'c' || roomValue == 'c')) return false; //C1
+                    if (roomValue == 'e' && bpValue != 'c') return false; //C3
+                    if (bpValue == 'c' && roomValue == 'n' || roomValue == 'b') addedPath = true; //added a connection cell to path
+                   
+                }
+            }
+            return addedPath; //C2
         }
 
         private static IEnumerable<TransformedBuildPiece> Transformations(BuildPiece b, Point2D s)
@@ -105,6 +234,6 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
         }
 
 
-   
+
     }
 }
