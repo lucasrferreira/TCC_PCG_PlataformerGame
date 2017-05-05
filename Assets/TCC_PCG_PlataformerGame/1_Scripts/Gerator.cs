@@ -17,6 +17,7 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
         [SerializeField]
         private Room _roomToGenerate;
         private char[,] _room;
+        private IEnumerator coroutine;
 
         private static readonly System.Random Rnd = new System.Random();
 
@@ -32,15 +33,16 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                 }
             }
 
-            foreach (var exits in _roomToGenerate.ExitPositionList)
-            {
-                _room[exits.X, exits.X] = 'e';
-            }
-            InitiateAlgoritm((x, y) => {} );
+            //foreach (var exits in _roomToGenerate.ExitPositionList)
+            //{
+            //    _room[exits.X, exits.Y] = 'e';
+            //}
+            InitiateAlgoritm((x, y) => { PrintRoom(y.GetAtualSolutionRoom(x)); } );
         }
 
         public void InitiateAlgoritm(Action<char[,], BuildRoomSolution> callbackAction)
         {
+            Application.runInBackground = true;
             var room = _room;
             var solution = new BuildRoomSolution();
             var exitPoint = new List<Point2D>(_roomToGenerate.ExitPositionList);
@@ -48,10 +50,24 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
             var buildPieces = _buildPieces;
             var startPoints = new List<Point2D> { GetStartPoint(_roomToGenerate) };
 
-            StartCoroutine(Generate(room, solution, exitPoint, exitPointLeft, buildPieces, startPoints, value =>
+            foreach (var ep in exitPoint)
             {
+                var bp = new BuildPiece(new char[,]
+                {
+                    {'e'}
+                });
+                var tbp = new TransformedBuildPiece(new Point2D(0,0), ep, bp);
+                solution.Add(tbp);
+            }
+
+            PrintRoom(solution.GetAtualSolutionRoom(room));
+
+            coroutine = Generate(room, solution, exitPoint, exitPointLeft, buildPieces, startPoints, value =>
+            {
+                StopCoroutine(coroutine);
                 callbackAction(room, value);
-            }));
+            });
+            StartCoroutine(coroutine);
         }
         
 
@@ -72,6 +88,9 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                         PrintRoom(solution.GetAtualSolutionRoom(room));
                         var exits = ContainsExits(g, exitPointLeft) as List<Point2D>;
                         exitPointLeft = exitPointLeft.Except(exits).ToList();
+                        Debug.Log("Exits " + exits.Count);
+                        Debug.Log("ExitsPointLeft " + exitPointLeft.Count);
+                        Debug.Log("ExitsPointLeft " + exitPointLeft.Any());
                         if (!exitPointLeft.Any())
                             callbackAction(solution);
                         if (exits.Any())
@@ -80,18 +99,24 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                             startPoints = PossibleStartPoints(g, sp) as List<Point2D>;
 
                         BuildRoomSolution returnedValue = null;
-                        yield return Generate(room, solution, exitPoint, exitPointLeft, _buildPieces, startPoints,
+                        var corrotine = Generate(room, solution, exitPoint, exitPointLeft, _buildPieces, startPoints,
                             (value) => { returnedValue = value; }
                         );
+                        StartCoroutine(corrotine);
                         while (returnedValue == null)
                         {
                             yield return null;
                         }
                         if (!returnedValue.Empty())
+                        {
+                            StopCoroutine(corrotine);
                             callbackAction(returnedValue);
+                        }
 
                         solution.RemoveLast();
-                        exitPointLeft = exitPointLeft.Union(exits) as List<Point2D>;
+                        exitPointLeft = exitPointLeft.Union(exits).ToList() as List<Point2D>;
+                        PrintRoom(solution.GetAtualSolutionRoom(room));
+                        Debug.Log("Fiz o Union " + exitPointLeft.Count);
                     }
                 }
             }
@@ -104,9 +129,10 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                     let c = tbp.ConnectionPoint
                     let p = tbp.StartPoint
                     let infBound = p - c
-                    let supBound = infBound + new Point2D(tbp.BuildPiece.Piece.GetLength(0), tbp.BuildPiece.Piece.GetLength(1))
-                    let infBoundDif = infBound - ep let supBoundDif = supBound - ep
-                    where infBoundDif.Y < 0 && infBoundDif.X < 0 && supBoundDif.Y > 0 && supBoundDif.X > 0
+                    let supBound = infBound + new Point2D(tbp.BuildPiece.Piece.GetLength(0)-1, tbp.BuildPiece.Piece.GetLength(1)-1)
+                    let infBoundDif = infBound - ep
+                    let supBoundDif = supBound - ep
+                    where infBoundDif.Y <= 0 && infBoundDif.X <= 0 && supBoundDif.Y >= 0 && supBoundDif.X >= 0
                     select ep).ToList();
         }
 
@@ -163,11 +189,13 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
         {
             var roomHeight = room.GetLength(0);
             var roomWidth = room.GetLength(1);
+            var pieceHeight = tb.BuildPiece.Piece.GetLength(0);
+            var pieceWidth= tb.BuildPiece.Piece.GetLength(1);
             var c = tb.ConnectionPoint;
             var p = tb.StartPoint;
             var diference = p - c;
-            if (diference.Y < 0 || diference.X < 0 || 
-                diference.Y > roomWidth || diference.X > roomHeight) //C0 - test piece in room bounds
+            if (diference.Y < 0 || diference.X < 0 ||
+                diference.Y  + pieceWidth - 1 >= roomWidth || diference.X + pieceHeight - 1 >= roomHeight) //C0 - test piece in room bounds
                 return false;
 
             var atualRoom = sol.GetAtualSolutionRoom(room);
@@ -187,9 +215,9 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                     var bpValue = tb.BuildPiece.Piece[i, j];
 
                     if (roomValue == 's' && (bpValue == 'c' || bpValue == 'b')) return false; //C1
-                    if (bpValue == 's' && (roomValue == 'c' || roomValue == 'c')) return false; //C1
+                    if (bpValue == 's' && (roomValue == 'c' || roomValue == 'b')) return false; //C1
                     if (roomValue == 'e' && bpValue != 'c') return false; //C3
-                    if (bpValue == 'c' && roomValue == 'n' || roomValue == 'b') addedPath = true; //added a connection cell to path
+                    if (bpValue == 'c' && (roomValue == 'n' || roomValue == 'b' || roomValue == 'e')) addedPath = true; //added a connection cell to path
                    
                 }
             }

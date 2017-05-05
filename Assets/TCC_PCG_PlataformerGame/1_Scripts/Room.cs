@@ -39,6 +39,11 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                 return (X * 397) ^ Y;
             }
         }
+
+        public override string ToString()
+        {
+            return "x: "+X+",y: "+Y;
+        }
     }
 
     [Serializable]

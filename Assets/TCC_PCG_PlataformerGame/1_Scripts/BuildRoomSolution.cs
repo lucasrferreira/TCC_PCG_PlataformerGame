@@ -45,7 +45,8 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                     {
                         cPoint.Y = j;
                         var newPoint = dif + cPoint;
-                        _room[newPoint.X, newPoint.Y] = tbp.BuildPiece.Piece[i, j];
+                        if(tbp.BuildPiece.Piece[i, j] != 'n')
+                            _room[newPoint.X, newPoint.Y] = tbp.BuildPiece.Piece[i, j];
                     }
                 }
             }
