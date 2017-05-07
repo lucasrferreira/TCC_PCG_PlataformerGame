@@ -2,24 +2,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Assets.TCC_PCG_PlataformerGame.Scripts;
 using TCC_PCG_PlataformerGame.Scripts;
-using UnityEditor;
 using UnityEngine;
 
 namespace Assets.TCC_PCG_PlataformerGame.Scripts
 {
-    public class Gerator : MonoBehaviour
+    public class Generator : MonoBehaviour
     {
     
         [SerializeField]
         private readonly List<BuildPiece> _buildPieces = BuildPiecesRepository.BuildPieces;
         [SerializeField]
-        private Room _roomToGenerate;
+        public Room _roomToGenerate;
         private char[,] _room;
         private IEnumerator coroutine;
-
         private static readonly System.Random Rnd = new System.Random();
+
+        //public Action EndOfExecution;
+
+        //public BuildRoomSolution CurrentSolution { get; private set; }
 
         private void Awake()
         {
@@ -37,7 +38,6 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
             //{
             //    _room[exits.X, exits.Y] = 'e';
             //}
-            InitiateAlgoritm((x, y) => { PrintRoom(y.GetAtualSolutionRoom(x)); } );
         }
 
         public void InitiateAlgoritm(Action<char[,], BuildRoomSolution> callbackAction)
@@ -62,65 +62,71 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
 
             PrintRoom(solution.GetAtualSolutionRoom(room));
 
-            coroutine = Generate(room, solution, exitPoint, exitPointLeft, buildPieces, startPoints, value =>
-            {
-                StopCoroutine(coroutine);
-                callbackAction(room, value);
-            });
-            StartCoroutine(coroutine);
+            StartCoroutine(Generate(room, solution, exitPoint, exitPointLeft, buildPieces, startPoints, 
+                value => callbackAction(room, solution),
+                value => callbackAction(room, value)));
         }
         
 
 
         private IEnumerator Generate(char[,] room, BuildRoomSolution solution, List<Point2D> exitPoint, 
             List<Point2D> exitPointLeft, List<BuildPiece> buildPieces, List<Point2D> startPoints, 
-            Action<BuildRoomSolution> callbackAction)
+            Action<BuildRoomSolution> callbackActionFailed, Action<BuildRoomSolution> callbackActionSucess)
         {
+
+            var valueWasFound = false;
+            BuildRoomSolution returnedValue = null;
             foreach (var sp in Perm(startPoints))
             {
+                yield return null;
+                if(valueWasFound)
+                    break;
                 foreach (var bp in Perm(buildPieces))
                 {
+                    yield return null;
+                    if(valueWasFound)
+                        break;
                     foreach (var g in Perm(Transformations(bp, sp)))
                     {
+                        yield return null;
                         if (!SatisfiesConstraints(g, solution, room)) continue;
 
                         solution.Add(g);
-                        PrintRoom(solution.GetAtualSolutionRoom(room));
+                        //PrintRoom(solution.GetAtualSolutionRoom(room));
                         var exits = ContainsExits(g, exitPointLeft) as List<Point2D>;
                         exitPointLeft = exitPointLeft.Except(exits).ToList();
-                        Debug.Log("Exits " + exits.Count);
-                        Debug.Log("ExitsPointLeft " + exitPointLeft.Count);
-                        Debug.Log("ExitsPointLeft " + exitPointLeft.Any());
+                        //Debug.Log("Exits " + exits.Count);
+                        //Debug.Log("ExitsPointLeft " + exitPointLeft.Count);
+                        //Debug.Log("ExitsPointLeft " + exitPointLeft.Any());
                         if (!exitPointLeft.Any())
-                            callbackAction(solution);
+                            callbackActionSucess(solution);
                         if (exits.Any())
                             startPoints = PossibleStartPoints(solution, room) as List<Point2D>;
                         else
                             startPoints = PossibleStartPoints(g, sp) as List<Point2D>;
 
-                        BuildRoomSolution returnedValue = null;
-                        var corrotine = Generate(room, solution, exitPoint, exitPointLeft, _buildPieces, startPoints,
-                            (value) => { returnedValue = value; }
-                        );
-                        StartCoroutine(corrotine);
-                        while (returnedValue == null)
-                        {
-                            yield return null;
-                        }
-                        if (!returnedValue.Empty())
-                        {
-                            StopCoroutine(corrotine);
-                            callbackAction(returnedValue);
-                        }
+                        yield return StartCoroutine(Generate(room, solution, exitPoint, exitPointLeft, _buildPieces, startPoints,
+                            (value) => {},
+                            (value) =>
+                                {
+                                    returnedValue = value;
+                                    valueWasFound = true;
+                                }
+                            ));
+                        if(valueWasFound)
+                            break;
 
                         solution.RemoveLast();
                         exitPointLeft = exitPointLeft.Union(exits).ToList() as List<Point2D>;
                         PrintRoom(solution.GetAtualSolutionRoom(room));
-                        Debug.Log("Fiz o Union " + exitPointLeft.Count);
+                        //Debug.Log("Fiz o Union " + exitPointLeft.Count);
                     }
                 }
             }
-            callbackAction(new BuildRoomSolution());
+            if (valueWasFound)
+                callbackActionSucess(returnedValue);
+            else
+                callbackActionFailed(null);
         }
 
         private static IEnumerable<Point2D> ContainsExits(TransformedBuildPiece tbp, IEnumerable<Point2D> exitPoints)
