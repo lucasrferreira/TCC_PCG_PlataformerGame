@@ -78,17 +78,17 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
             BuildRoomSolution returnedValue = null;
             foreach (var sp in Perm(startPoints))
             {
-                yield return null;
+                //yield return null;
                 if(valueWasFound)
                     break;
                 foreach (var bp in Perm(buildPieces))
                 {
-                    yield return null;
+                    //yield return null;
                     if(valueWasFound)
                         break;
                     foreach (var g in Perm(Transformations(bp, sp)))
                     {
-                        yield return null;
+                        //yield return null;
                         if (!SatisfiesConstraints(g, solution, room)) continue;
 
                         solution.Add(g);
@@ -105,6 +105,7 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                         else
                             startPoints = PossibleStartPoints(g, sp) as List<Point2D>;
 
+                        Debug.Log("startin new");
                         yield return StartCoroutine(Generate(room, solution, exitPoint, exitPointLeft, _buildPieces, startPoints,
                             (value) => {},
                             (value) =>
@@ -118,8 +119,7 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
 
                         solution.RemoveLast();
                         exitPointLeft = exitPointLeft.Union(exits).ToList() as List<Point2D>;
-                        PrintRoom(solution.GetAtualSolutionRoom(room));
-                        //Debug.Log("Fiz o Union " + exitPointLeft.Count);
+                        //
                     }
                 }
             }

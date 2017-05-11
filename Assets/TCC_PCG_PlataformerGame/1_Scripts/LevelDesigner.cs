@@ -24,11 +24,13 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
             {
                 for (var j = 0; j < c.GetLength(1); j++)
                 {
-                    if (c[i, j] != 's') continue;
+                    if (c[i, j] != 's' && c[i, j] != 'n') continue;
                     var x = (j - _roomToGenerate.Size.Y / 2) * _spriteSize;
                     var y = (-i + _roomToGenerate.Size.X / 2) * _spriteSize;
                     var position = new Vector3(x,y);
                     var block = Instantiate(_blockPrefab, position, Quaternion.identity, transform);
+                    if(c[i, j] == 'n')
+                        block.GetComponent<SpriteRenderer>().color = Color.blue;
                 }
             }
         }
