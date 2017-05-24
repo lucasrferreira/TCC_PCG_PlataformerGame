@@ -28,8 +28,9 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                     var x = (j - _roomToGenerate.Size.Y / 2) * _spriteSize;
                     var y = (-i + _roomToGenerate.Size.X / 2) * _spriteSize;
                     var position = new Vector3(x,y);
-                    var block = Instantiate(_blockPrefab, position, Quaternion.identity, transform);
-                    if(c[i, j] == 'n')
+                    var block = Instantiate(_blockPrefab, Vector3.zero, Quaternion.identity, transform);
+                    block.transform.localPosition = position;
+                    if (c[i, j] == 'n')
                         block.GetComponent<SpriteRenderer>().color = Color.blue;
                 }
             }

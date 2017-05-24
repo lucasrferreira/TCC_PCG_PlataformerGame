@@ -1,0 +1,17 @@
+Tile RULES:
+
+x t x
+l o r
+x b x
+
+uls = Up Left squared = l || t 
+urs = up right squared = r || t
+bls = bottom left squared = b || l
+brs = bottom right squared = b || r
+
+g = is grass = !t
+
+cl = cliff left = bls && uls
+cr = cliff right = brs && urs 
+
+alone = cl && cr
