@@ -12,8 +12,8 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
     
         [SerializeField]
         private readonly List<BuildPiece> _buildPieces = BuildPiecesRepository.BuildPieces;
-        [SerializeField]
-        public Room _roomToGenerate;
+     
+        private Room _roomToGenerate;
         private char[,] _room;
         private IEnumerator coroutine;
         private static readonly System.Random Rnd = new System.Random();
@@ -22,23 +22,22 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
 
         //public BuildRoomSolution CurrentSolution { get; private set; }
 
-        private void Awake()
+        public void InitializeGenerator(Room roomToGenerate)
         {
+            _roomToGenerate = roomToGenerate;
             _room = new char[_roomToGenerate.Size.X, _roomToGenerate.Size.Y];
+            Debug.Log(_room);
             for (var i = 0; i < _room.GetLength(0); i++)
             {
                 for (var j = 0; j < _room.GetLength(1); j++)
                 {
 
-                    _room[i,j] = 'n';
+                    _room[i, j] = 'n';
                 }
             }
 
-            //foreach (var exits in _roomToGenerate.ExitPositionList)
-            //{
-            //    _room[exits.X, exits.Y] = 'e';
-            //}
         }
+        
 
         public void InitiateAlgoritm(Action<char[,], BuildRoomSolution> callbackAction)
         {
@@ -59,12 +58,17 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                 var tbp = new TransformedBuildPiece(new Point2D(0,0), ep, bp);
                 solution.Add(tbp);
             }
-
+            Debug.Log(room);
             PrintRoom(solution.GetAtualSolutionRoom(room));
 
             StartCoroutine(Generate(room, solution, exitPoint, exitPointLeft, buildPieces, startPoints, 
                 value => callbackAction(room, solution),
                 value => callbackAction(room, value)));
+        }
+
+        public void StopGeneration()
+        {
+            StopAllCoroutines();
         }
         
 
@@ -142,7 +146,7 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                     select ep).ToList();
         }
 
-        private static void PrintRoom(char[,] room)
+        public static void PrintRoom(char[,] room)
         {
             var rowCount = room.GetLength(0);
             var colCount = room.GetLength(1);
