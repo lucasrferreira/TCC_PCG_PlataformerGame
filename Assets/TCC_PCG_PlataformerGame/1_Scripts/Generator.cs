@@ -58,8 +58,7 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                 var tbp = new TransformedBuildPiece(new Point2D(0,0), ep, bp);
                 solution.Add(tbp);
             }
-            Debug.Log(room);
-            PrintRoom(solution.GetAtualSolutionRoom(room));
+            Generator.PrintRoom(solution.GetAtualSolutionRoom(room));
 
             StartCoroutine(Generate(room, solution, exitPoint, exitPointLeft, buildPieces, startPoints, 
                 value => callbackAction(room, solution),
@@ -109,7 +108,6 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                         else
                             startPoints = PossibleStartPoints(g, sp) as List<Point2D>;
 
-                        Debug.Log("startin new");
                         yield return StartCoroutine(Generate(room, solution, exitPoint, exitPointLeft, _buildPieces, startPoints,
                             (value) => {},
                             (value) =>

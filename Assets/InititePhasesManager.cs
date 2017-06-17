@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using NUnit.Framework.Constraints;
 using UnityEngine;
 
 namespace Assets.TCC_PCG_PlataformerGame.Scripts
@@ -23,12 +22,16 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
         
         public void CreateNewLevel()
         {
-            var exits = new List<Point2D>(3);
-            for (int i = 0; i < 3; i++)
+            var exits = new List<Point2D>(3)
             {
-                exits.Add(new Point2D(Rnd.Next(0,levelsSize.X-1), Rnd.Next(0,levelsSize.Y-1)));
-            }
-            
+                new Point2D(0, Rnd.Next(2, levelsSize.Y - 2)),
+                new Point2D(Rnd.Next(2, levelsSize.X - 2), 0),
+                new Point2D(Rnd.Next(2, levelsSize.X - 2), levelsSize.Y - 1)
+            };
+            //for (int i = 0; i < 3; i++)
+            //{
+            //}
+
             var roomToGenerate = new Room(levelsSize,exits,exits[Rnd.Next(0,exits.Count-1)]);
             _levelDesigner = Instantiate(_levelDesignerPrefab);
             _levelDesigner.InitializeDesigner(roomToGenerate);

@@ -54,6 +54,7 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                 generator.StopGeneration();
                 Destroy(generator.gameObject);
             }
+            Generator.PrintRoom(solution.GetAtualSolutionRoom(generatedLevel));
             Finished = true;
         }
 
@@ -107,9 +108,10 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
             {
                 Debug.Log(point2D);
                 var block = Instantiate(ExitPrefab, Vector3.zero, Quaternion.identity, transform);
-                var x = (point2D.Y + 2 - _roomToGenerate.Size.Y / 2) * _spriteSize;
-                var y = (point2D.X + 2 + _roomToGenerate.Size.X / 2) * _spriteSize;
+                var x = (point2D.Y - _roomToGenerate.Size.Y / 2) * _spriteSize;
+                var y = (-point2D.X + _roomToGenerate.Size.X / 2) * _spriteSize;
                 var position = new Vector3(x, y);
+                Debug.Log(position);
                 block.transform.localPosition = position;
             }
         }
