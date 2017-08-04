@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Assets.TCC_PCG_PlataformerGame._1_Scripts;
 using UnityEngine;
 
@@ -23,6 +24,7 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
         public bool Finished { get; private set; }
 
         public GameObject ExitPrefab;
+        public Action DesignFinish;
 
         public void InitializeDesigner(Room roomToGenerate)
         {
@@ -54,6 +56,7 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                 generator.StopGeneration();
                 Destroy(generator.gameObject);
             }
+            DesignFinish();
             Generator.PrintRoom(solution.GetAtualSolutionRoom(generatedLevel));
             Finished = true;
         }

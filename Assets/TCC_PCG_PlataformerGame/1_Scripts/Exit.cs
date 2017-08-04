@@ -1,14 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MoreMountains.CorgiEngine;
 using UnityEngine;
 
-public class Exit : MonoBehaviour {
+public class Exit : MonoBehaviour
+{
 
-    void OnCollisionEnter2D(Collision2D coll)
+    public InfinitePhasesLvlManager InfinitePhasesLvlManager;
+
+    void OnTriggerEnter2D(Collider2D coll)
     {
-        Debug.Log("collide "+ coll.gameObject.tag);
-        if (coll.gameObject.tag == "Enemy")
-            coll.gameObject.SendMessage("ApplyDamage", 10);
-
+        var charac = coll.GetComponent<CharacterBehavior>();
+        if(charac == null) return;
+        
     }
 }
