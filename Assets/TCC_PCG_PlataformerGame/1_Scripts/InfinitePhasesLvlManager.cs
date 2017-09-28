@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets.TCC_PCG_PlataformerGame.Scripts;
 using UnityEngine;
-using MoreMountains.CorgiEngine;
+//using MoreMountains.CorgiEngine;
 
 public class InfinitePhasesLvlManager : MonoBehaviour
 {
 
     private InfinitePhasesManager _ipManager;
-    [SerializeField] private CharacterBehavior _playerPrefab;
-    private CharacterBehavior _playerInstance;
+    //[SerializeField] private CharacterBehavior _playerPrefab;
+    //private CharacterBehavior _playerInstance;
     private Exit _atualStartPoint;
     private List<Exit> _atualExits;
     private bool _isFirstPhase = true;
@@ -54,8 +54,8 @@ public class InfinitePhasesLvlManager : MonoBehaviour
     }
     private void InitiatePhase()
     {
-        if (_playerInstance == null)
-            _playerInstance = Instantiate(_playerPrefab);
+        //if (_playerInstance == null)
+        //    _playerInstance = Instantiate(_playerPrefab);
         _ipManager.DrawNewGame();
         _atualExits = FindObjectsOfType<Exit>().ToList();
         _atualStartPoint = _atualExits[Random.Range(0, _atualExits.Count)];
@@ -64,7 +64,7 @@ public class InfinitePhasesLvlManager : MonoBehaviour
             if(exit == _atualStartPoint) continue;
             exit.InfinitePhasesLvlManager = this;
         }
-        _playerInstance.transform.position = _atualStartPoint.transform.position;
+        //_playerInstance.transform.position = _atualStartPoint.transform.position;
         _ipManager.CreateNewLevel();
     }
 }

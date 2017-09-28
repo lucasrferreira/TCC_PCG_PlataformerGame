@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using MoreMountains.CorgiEngine;
+//using MoreMountains.CorgiEngine;
 using UnityEngine;
 
 public class Exit : MonoBehaviour
@@ -10,8 +10,8 @@ public class Exit : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D coll)
     {
-        var charac = coll.GetComponent<CharacterBehavior>();
-        if(charac == null) return;
+        //var charac = coll.GetComponent<CharacterBehavior>();
+        //if(charac == null) return;
         
     }
 }
