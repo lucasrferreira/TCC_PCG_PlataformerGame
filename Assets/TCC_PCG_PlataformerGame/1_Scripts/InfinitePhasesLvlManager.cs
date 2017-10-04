@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Acrocatic;
 using Assets.TCC_PCG_PlataformerGame.Scripts;
 using UnityEngine;
 //using MoreMountains.CorgiEngine;
@@ -8,9 +9,11 @@ using UnityEngine;
 public class InfinitePhasesLvlManager : MonoBehaviour
 {
 
+    public CameraFollow Camera;
     private InfinitePhasesManager _ipManager;
-    //[SerializeField] private CharacterBehavior _playerPrefab;
-    //private CharacterBehavior _playerInstance;
+    [SerializeField] private Player _playerPrefab;
+    private Player _playerInstance;
+    
     private Exit _atualStartPoint;
     private List<Exit> _atualExits;
     private bool _isFirstPhase = true;
@@ -22,7 +25,7 @@ public class InfinitePhasesLvlManager : MonoBehaviour
 	{
         _ipManager = FindObjectOfType<InfinitePhasesManager>();
 	    _ipManager.CreationFinish += CreationFinish;
-	}
+    }
 
     private void OnDestroy()
     {
@@ -54,8 +57,10 @@ public class InfinitePhasesLvlManager : MonoBehaviour
     }
     private void InitiatePhase()
     {
-        //if (_playerInstance == null)
-        //    _playerInstance = Instantiate(_playerPrefab);
+        if (_playerInstance == null) { 
+            _playerInstance = Instantiate(_playerPrefab);
+            Camera.player = _playerInstance.transform;
+        }
         _ipManager.DrawNewGame();
         _atualExits = FindObjectsOfType<Exit>().ToList();
         _atualStartPoint = _atualExits[Random.Range(0, _atualExits.Count)];
@@ -64,7 +69,7 @@ public class InfinitePhasesLvlManager : MonoBehaviour
             if(exit == _atualStartPoint) continue;
             exit.InfinitePhasesLvlManager = this;
         }
-        //_playerInstance.transform.position = _atualStartPoint.transform.position;
+        _playerInstance.transform.position = _atualStartPoint.transform.position;
         _ipManager.CreateNewLevel();
     }
 }

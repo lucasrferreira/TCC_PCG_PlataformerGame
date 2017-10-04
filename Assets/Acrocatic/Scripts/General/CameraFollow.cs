@@ -19,7 +19,7 @@ namespace Acrocatic {
 		public Vector2 minXAndY;
 
 
-		private Transform player;		// Reference to the player's transform.
+		public Transform player;		// Reference to the player's transform.
 		
 		
 		void Start ()
