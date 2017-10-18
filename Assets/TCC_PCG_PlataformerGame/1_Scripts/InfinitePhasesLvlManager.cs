@@ -50,7 +50,7 @@ public class InfinitePhasesLvlManager : MonoBehaviour
         InitiatePhase();
     }
 
-    private void LvlFinish()
+    public void LvlFinish()
     {
         if (!_creationFinished) return;
         InitiatePhase();
