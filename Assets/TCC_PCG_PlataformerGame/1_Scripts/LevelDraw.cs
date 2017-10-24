@@ -10,7 +10,7 @@ namespace Assets.TCC_PCG_PlataformerGame._1_Scripts
         public LevelSprite _LevelSprite;
         private TileAroundMap _tileMap = new TileAroundMap();
 
-        public Sprite GetSprite(char[,] tileAround)
+        public GameObject GetSprite(char[,] tileAround)
         {
             if(tileAround.GetLength(0)!=TileAroundOrder || tileAround.GetLength(1)!=TileAroundOrder)
                 throw new ArgumentException("tileAround should be char["+TileAroundOrder+","+TileAroundOrder+"]");
@@ -86,15 +86,15 @@ namespace Assets.TCC_PCG_PlataformerGame._1_Scripts
         [Serializable]
         public struct LevelSprite
         {
-            public Sprite UpperBottomLeftSquared;
-            public Sprite UpperBottomRightSquared;
-            public Sprite BottomLeft;
-            public Sprite BottomRight;
-            public Sprite LeftCliff;
-            public Sprite RightCliff;
-            public Sprite Grass;
-            public Sprite Alone;
-            public Sprite NoGrass;
+            public GameObject UpperBottomLeftSquared;
+            public GameObject UpperBottomRightSquared;
+            public GameObject BottomLeft;
+            public GameObject BottomRight;
+            public GameObject LeftCliff;
+            public GameObject RightCliff;
+            public GameObject Grass;
+            public GameObject Alone;
+            public GameObject NoGrass;
         }
     }
 }

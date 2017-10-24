@@ -99,9 +99,9 @@ namespace Assets.TCC_PCG_PlataformerGame.Scripts
                     var x = (j -2 - _roomToGenerate.Size.Y / 2) * _spriteSize;
                     var y = (-i +2 + _roomToGenerate.Size.X / 2) * _spriteSize;
                     var position = new Vector3(x, y);
-                    var block = Instantiate(_blockPrefab, Vector3.zero, Quaternion.identity, transform);
+                    var block = Instantiate(sprite, Vector3.zero, Quaternion.identity, transform);
                     block.transform.localPosition = position;
-                    block.GetComponent<SpriteRenderer>().sprite = sprite;
+                    //block.GetComponent<SpriteRenderer>().sprite = sprite;
 
                     
                 }
