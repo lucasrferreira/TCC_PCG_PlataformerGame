@@ -9,8 +9,9 @@ public class Exit : MonoBehaviour
     {
         if (coll.CompareTag("Player"))
         {
-            //InfinitePhasesLvlManager.LvlFinish();
-            Debug.Log("FINISH");
+            if(InfinitePhasesLvlManager)
+                InfinitePhasesLvlManager.LvlFinish();
+
         }
         
     }

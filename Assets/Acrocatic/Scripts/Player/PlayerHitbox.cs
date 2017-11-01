@@ -100,10 +100,10 @@ namespace Acrocatic {
 			Vector2 pos = transform.position;
 			if (player.facingRight) {
 				player.frontCheckTop.transform.position = new Vector2 (pos.x + boxCollider.offset.x + (boxCollider.size.x / 2), pos.y + boxCollider.offset.y + (boxCollider.size.y / 2));
-				player.frontCheckBot.transform.position = new Vector2 (pos.x + boxCollider.offset.x + (boxCollider.size.x / 2) + 0.1f, pos.y + boxCollider.offset.y - (boxCollider.size.y / 2) - (circleCollider.radius/2));
+				player.frontCheckBot.transform.position = new Vector2 (pos.x + boxCollider.offset.x + (boxCollider.size.x / 2) + 0.1f, pos.y + boxCollider.offset.y - (boxCollider.size.y / 2) );
 			} else {
 				player.frontCheckTop.transform.position = new Vector2 (pos.x + boxCollider.offset.x - (boxCollider.size.x / 2), pos.y + boxCollider.offset.y + (boxCollider.size.y / 2));
-				player.frontCheckBot.transform.position = new Vector2 (pos.x + boxCollider.offset.x - (boxCollider.size.x / 2) - 0.1f, pos.y + boxCollider.offset.y - (boxCollider.size.y / 2) - (circleCollider.radius/2));
+				player.frontCheckBot.transform.position = new Vector2 (pos.x + boxCollider.offset.x - (boxCollider.size.x / 2) - 0.1f, pos.y + boxCollider.offset.y - (boxCollider.size.y / 2) );
 			}
 		}
 
